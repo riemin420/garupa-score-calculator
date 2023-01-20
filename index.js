@@ -12,7 +12,7 @@ Math.floor(
 */
 
 //inputデータ
-const input = require('./input_scoreranking_helix_riron.json');
+const input = require('./input_scoreranking_mixnuts.json');
 
 //タイミング判定係数
 const PERFECT_RATE = 1.1;
@@ -24,7 +24,10 @@ const MISS_RATE = 0;
 //PERFECTごとにX%増えるスキルボーナスの割合
 const EVERY_P_05 = 0.5;
 
-//PERFECTごとにX%増えるスキルボーナスが含まれているかを示すフラグ
+//PERFECTごとにX%増えるスキルボーナスが含まれているかを示すフラグ(全体であるかどうか)
+let skill_bonus_everyp_all_f = false;
+
+//PERFECTごとにX%増えるスキルボーナスのカードかを示すフラグ(1枚1枚のカードで変更)
 let skill_bonus_everyp_f = false;
 
 //PERFECTごとにX%増えるスキルボーナスの現在の値
@@ -122,9 +125,11 @@ function skillStringToNumber(skill){
     if(typeof(skill) == "string"){
         //100+がリーダーの場合も計算するためフラグをON
         skill_bonus_everyp_f = true;
+        skill_bonus_everyp_all_f = true;
         skillnumber = Number(skill.split('+')[0]);
     }else{
-        //何もしない
+        //100+のカードであるフラグオフ
+        skill_bonus_everyp_f = false;
     }
     return skillnumber;
 }
@@ -257,8 +262,8 @@ function calcOneNoteScoreInsideSkill(total_band_score, music_level, total_notes,
     const inner_calc = Math.floor(
         total_band_score * 3 * (((music_level - 5) * 0.01 + 1) * (1/total_notes)) * judge_rate * combo_rate);
 
-    //PERFECTごとにスキルボーナスが増える場合(一旦skill_bonus = 100かどうかで判定する)
-    if(skill_bonus == 100){
+    //PERFECTごとにスキルボーナスが増える場合(フラグ判定)
+    if(skill_bonus_everyp_f){
         current_everyp05_skill_bonus = current_everyp05_skill_bonus + EVERY_P_05;
 
         const outer_calc = Math.floor(inner_calc * (current_everyp05_skill_bonus / 100));
@@ -338,7 +343,7 @@ function sortFinalScore(){
 //true:リーダーにセットし計算
 //false:終了
 function existSkillBonusEveryp(){
-    if(!skill_bonus_everyp_f){
+    if(!skill_bonus_everyp_all_f){
         console.log("処理を終了します。")
     }else{
         console.log("リーダーを100+にして再計算します。");
